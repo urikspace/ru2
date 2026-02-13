@@ -1,5 +1,6 @@
 "use client";
 
+import confetti from "canvas-confetti";
 import { useMemo, useRef, useState } from "react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import RU2Slideshow from "@/components/ru2-slideshow";
@@ -14,7 +15,7 @@ export default function ValentinePage() {
   const hasStartedAudioRef = useRef(false);
 
   const question =
-    'If this guy was like "Hey — will you be my valentine?", what would you say?';
+    "hi. r u… p a l? if yes, i have an important question 🙂 would you like to be my valentine?";
 
   // ✅ VALENTINE TOP (Photo 1) slideshow filenames go here ONLY
   const valentineTopImages = [
@@ -40,9 +41,20 @@ export default function ValentinePage() {
     if (!el) return;
 
     try {
-      el.volume = 1;
       el.loop = true;
+      el.volume = 0;
       await el.play();
+
+      const fadeMs = 1400;
+      const steps = 20;
+      const stepMs = Math.floor(fadeMs / steps);
+      let i = 0;
+
+      const timer = window.setInterval(() => {
+        i += 1;
+        el.volume = Math.min(1, i / steps);
+        if (i >= steps) window.clearInterval(timer);
+      }, stepMs);
     } catch {
       // fail silently
     }
@@ -52,7 +64,38 @@ export default function ValentinePage() {
     startAudio();
     setChoice(val);
     setAccepted(true);
-  }
+
+    // Confetti on EVERY tap (heart-shaped)
+      if (val === "YES 💘") {
+        confetti({
+          particleCount: 55,
+          spread: 65,
+          startVelocity: 24,
+          origin: { y: 0.72 },
+          shapes: ["emoji"],
+          scalar: 1.25,
+          // @ts-ignore canvas-confetti emoji typing can be missing/loose
+          emojis: ["💘", "💖", "💗"],
+        });
+      } else {
+        const big = () =>
+          confetti({
+            particleCount: 90,
+            spread: 95,
+            startVelocity: 32,
+            origin: { y: 0.72 },
+            shapes: ["emoji"],
+            scalar: 1.55,
+            // @ts-ignore canvas-confetti emoji typing can be missing/loose
+            emojis: ["❤️‍🔥", "😍", "💞", "💕"],
+          });
+
+        big();
+        window.setTimeout(big, 220);
+        window.setTimeout(big, 440);
+      }
+    }
+
 
   return (
     <main className="min-h-screen ru2-valentine-bg">
@@ -89,7 +132,7 @@ export default function ValentinePage() {
               </h1>
 
               <p className="mt-2 text-sm leading-relaxed text-zinc-700 dark:text-zinc-200">
-                (You can only pick the correct answer.)
+                (Please pick the answer that’s in your heart.)
               </p>
 
               {/* Buttons */}
@@ -121,25 +164,26 @@ export default function ValentinePage() {
 
           {/* Reveal section */}
           <section
-            className={`mt-5 overflow-hidden rounded-3xl transition-all duration-500
-                        ${
-                          accepted
-                            ? "max-h-[1200px] opacity-100"
-                            : "max-h-0 opacity-0"
-                        }`}
+            className={`mt-5 rounded-3xl transition-all duration-500 ease-out
+                        ${accepted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2 pointer-events-none"}`}
             aria-hidden={!accepted}
           >
-            <div
-              className="rounded-3xl bg-white/75 p-5 shadow-lg ring-1 ring-black/10 backdrop-blur
-                            dark:bg-zinc-950/60 dark:ring-white/15"
-            >
+            <div className={accepted ? "block" : "hidden"}>
+              <div
+                className="rounded-3xl bg-white/75 p-5 shadow-lg ring-1 ring-black/10 backdrop-blur
+                          dark:bg-zinc-950/60 dark:ring-white/15"
+              >
               <div className="flex flex-col items-center text-center">
                 <p className="text-base font-semibold text-zinc-900 dark:text-zinc-50">
-                  {inviteText}
+                  {choice === "YES 💘"
+                    ? "Winner Winner, Chicken Dinner* 🍾"
+                    : "Ahhh splendid. Splendid choice indeed 😌"}
                 </p>
 
-                <p className="mt-2 text-sm text-zinc-700 dark:text-zinc-200">
-                  Arom Dee Thai — 6735 3rd Ave, Brooklyn, NY 11220
+                <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-300">
+                  {choice === "YES 💘"
+                    ? "Eating chicken not required*"
+                    : "Scroll for a brief message."}
                 </p>
 
                 {/* Photo 2 (conditional slideshow based on YES vs OF COURSE) */}
@@ -176,6 +220,68 @@ export default function ValentinePage() {
                   </div>
                 </div>
 
+                  <div className="mt-4 text-sm leading-relaxed text-left text-zinc-800 dark:text-zinc-200 space-y-4">
+                    {choice === "YES 💘" ? (
+                      <>
+                        <p>
+                          Our first time going out for dinner was on Friday, February 14, 2025.
+                          But that wasn’t really a date (mainly because it literally wasn’t a date 😭).
+                          So, what if this year we made up for it?
+                        </p>
+                        <p>
+                          I know you love Thai food. Have you ever heard of Arom Dee Thai
+                          (6735 3rd Ave, Brooklyn, NY 11220)?
+                        </p>
+                        <p>
+                          I’ve already reserved a table for us this Saturday at 8 PM.
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <p>Dear Rupal,</p>
+
+                        <p>
+                          Being with you is like running into the love of your life in the middle
+                          of the day, at a fast food restaurant. It doesn’t matter what’s going on
+                          around us – silly people who gorge on barely edible foods for the thrill
+                          of an allergic reaction, co-parents who ignore their children and
+                          consistently choose war in public spaces, janitors who’ve seen/done/mopped
+                          up everything and earned themselves a six-hour smoke break, and kids who
+                          scream incessantly and do their best to break everything within reach that
+                          isn’t bolted to the floor. We aren’t phased or distracted. They get blocked
+                          out, and we get locked in.
+                        </p>
+
+                        <p>
+                          When I think about you, I realize that I have never felt more sure about
+                          who a person is to me, and what that means than when I first met you.
+                        </p>
+
+                        <p>
+                          Jeremiah 29:11 says “For I know the plans I have for you,” declares the Lord,
+                          “plans to prosper you and not to harm you, plans to give you hope and a future.”
+                          Faith in God has been the pre-requisite for every good thing that has ever come
+                          into my life. That’s how I knew (so quickly and emphatically) that you were the
+                          one for me. It also <em>really</em> helps that you’re smart, hot, funny, and
+                          willing to take risks for the sake of evolving.
+                        </p>
+
+                        <p>
+                          Last year, the dinner table was crowded. This year, it’s just the two of us—
+                          that is, if you’ll join me?
+                        </p>
+
+                        <p>
+                          8 PM Saturday Dinner at Arom Dee Thai — 6735 3rd Ave, Brooklyn, NY 11220
+                        </p>
+
+                        <p>
+                          You are my valentine, and I love you. ♥️
+                        </p>
+                      </>
+                    )}
+                  </div>
+
                 <a
                   href="https://maps.app.goo.gl/wi5k1qb4PCLABoes8"
                   target="_blank"
@@ -191,6 +297,7 @@ export default function ValentinePage() {
                 <p className="mt-3 text-xs text-zinc-600 dark:text-zinc-300">
                   (RU2 v1 — more moments soon.)
                 </p>
+               </div> 
               </div>
             </div>
           </section>

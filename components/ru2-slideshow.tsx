@@ -32,7 +32,7 @@ export default function RU2Slideshow({
       window.setTimeout(() => {
         setIndex((prev) => (prev + 1) % safeImages.length);
         setFading(false);
-      }, 280);
+      }, 450);
     }, intervalMs);
 
     return () => {
@@ -57,7 +57,7 @@ export default function RU2Slideshow({
         src={src}
         alt={alt}
         fill
-        className={`object-cover transition-opacity duration-300 ${
+        className={`object-cover transition-opacity duration-900 ${
           fading ? "opacity-0" : "opacity-100"
         }`}
         priority={priority}
