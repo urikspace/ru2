@@ -1,26 +1,50 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* Optional: keep your own site-level base values minimal.
+   Don't override fonts here. We'll handle fonts later via next/font. */
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html,
+body {
+  height: 100%;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+}
+
+/* RU2 background utility for Valentine route */
+.ru2-valentine-bg {
+  background-image: url("/ru2/valentine/bg-pink-marble-hearts.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* Readability overlay */
+.ru2-overlay {
+  background: radial-gradient(
+      1200px 800px at 20% 10%,
+      rgba(255, 255, 255, 0.65),
+      rgba(255, 255, 255, 0.25),
+      rgba(255, 255, 255, 0)
+    ),
+    linear-gradient(
+      to bottom,
+      rgba(255, 192, 203, 0.25),
+      rgba(255, 105, 180, 0.10)
+    );
+}
+
+.dark .ru2-overlay {
+  background: radial-gradient(
+      1200px 800px at 20% 10%,
+      rgba(0, 0, 0, 0.55),
+      rgba(0, 0, 0, 0.25),
+      rgba(0, 0, 0, 0)
+    ),
+    linear-gradient(
+      to bottom,
+      rgba(20, 20, 20, 0.40),
+      rgba(0, 0, 0, 0.55)
+    );
 }
