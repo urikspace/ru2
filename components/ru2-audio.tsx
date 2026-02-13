@@ -17,6 +17,8 @@ export function useRU2Audio() {
 
 export default function RU2AudioProvider({ children }: { children: React.ReactNode }) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const retryTimerRef = useRef<number | null>(null);
+  const fadeTimerRef = useRef<number | null>(null);
   const [isReady, setIsReady] = useState(false);
 
   // Warm on initial app load (not just on /valentine)
@@ -32,6 +34,14 @@ export default function RU2AudioProvider({ children }: { children: React.ReactNo
     return () => el.removeEventListener("canplaythrough", onCanPlay);
   }, []);
 
+    // Cleanup timers if provider ever unmounts (or during hot reload)
+    useEffect(() => {
+    return () => {
+        if (retryTimerRef.current) window.clearInterval(retryTimerRef.current);
+        if (fadeTimerRef.current) window.clearInterval(fadeTimerRef.current);
+    };
+    }, []);
+
   const api = useMemo<RU2AudioCtx>(() => {
     return {
       isReady,
@@ -39,32 +49,84 @@ export default function RU2AudioProvider({ children }: { children: React.ReactNo
         const el = audioRef.current;
         if (!el) return;
 
-        try {
-          el.loop = true;
-          el.volume = 0;
+        // Ensure settings are correct every time
+        el.loop = true;
 
-          const p = el.play();
-          if (p && typeof p.then === "function") {
-            p.then(() => {
-              // fade in
-              const fadeMs = 1400;
-              const steps = 20;
-              const stepMs = Math.floor(fadeMs / steps);
-              let i = 0;
+        // If it's already playing, do nothing
+        if (!el.paused && el.currentTime > 0) return;
 
-              const timer = window.setInterval(() => {
-                i += 1;
-                el.volume = Math.min(1, i / steps);
-                if (i >= steps) window.clearInterval(timer);
-              }, stepMs);
-            }).catch(() => {
-              // do nothing; next tap can retry
-            });
-          }
-        } catch {
-          // ignore
-        }
-      },
+        // Clear any old timers (important if user taps again)
+        if (retryTimerRef.current) window.clearInterval(retryTimerRef.current);
+        retryTimerRef.current = null;
+
+        if (fadeTimerRef.current) window.clearInterval(fadeTimerRef.current);
+        fadeTimerRef.current = null;
+
+        // We start at 0 volume, but we will ONLY fade once we know audio is actually playing.
+        el.volume = 0;
+
+        const tryPlay = () => {
+            try {
+            const p = el.play();
+            if (p && typeof (p as any).catch === "function") {
+                (p as any).catch(() => {
+                // ignore; we'll retry
+                });
+            }
+            } catch {
+            // ignore; we'll retry
+            }
+        };
+
+        // 1) Immediate attempt (the actual user gesture)
+        tryPlay();
+
+        // 2) Retry a few times quickly after the tap (makes one tap behave like many taps)
+        const startedAt = Date.now();
+        retryTimerRef.current = window.setInterval(() => {
+            // stop retrying if playing
+            if (!el.paused && el.currentTime > 0) {
+            if (retryTimerRef.current) window.clearInterval(retryTimerRef.current);
+            retryTimerRef.current = null;
+            return;
+            }
+
+            // stop after ~8 seconds (prevents infinite loops)
+            if (Date.now() - startedAt > 8000) {
+            if (retryTimerRef.current) window.clearInterval(retryTimerRef.current);
+            retryTimerRef.current = null;
+            return;
+            }
+
+            tryPlay();
+        }, 350);
+
+        // 3) Fade in ONLY when playback begins
+        const onPlaying = () => {
+            // stop retries once it’s playing
+            if (retryTimerRef.current) window.clearInterval(retryTimerRef.current);
+            retryTimerRef.current = null;
+
+            // fade in
+            const fadeMs = 1400;
+            const steps = 20;
+            const stepMs = Math.floor(fadeMs / steps);
+            let i = 0;
+
+            fadeTimerRef.current = window.setInterval(() => {
+            i += 1;
+            el.volume = Math.min(1, i / steps);
+            if (i >= steps) {
+                if (fadeTimerRef.current) window.clearInterval(fadeTimerRef.current);
+                fadeTimerRef.current = null;
+            }
+            }, stepMs);
+
+            el.removeEventListener("playing", onPlaying);
+        };
+
+        el.addEventListener("playing", onPlaying);
+        },
     };
   }, [isReady]);
 
