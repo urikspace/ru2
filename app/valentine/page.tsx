@@ -1,24 +1,18 @@
 "use client";
 
 import confetti from "canvas-confetti";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import RU2Slideshow from "@/components/ru2-slideshow";
+import { useRU2Audio } from "@/components/ru2-audio";
 
 type Choice = "YES 💘" | "OF COURSE 😍";
 
 export default function ValentinePage() {
   const [accepted, setAccepted] = useState(false);
   const [choice, setChoice] = useState<Choice | null>(null);
-
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const hasStartedAudioRef = useRef(false);
   
-  useEffect(() => {
-    // Warm the audio element so play() doesn't wait on buffering in PWA
-    audioRef.current?.load();
-  }, []);
-
+  const { start: startAudio } = useRU2Audio();
   const question =
     "hi. r u… p a l? if yes, i have an important question 🙂 would you like to be my valentine?";
 
@@ -37,33 +31,6 @@ export default function ValentinePage() {
     const prefix = choice ? `You said: ${choice} 💞` : "💞";
     return `${prefix} Dinner date?`;
   }, [choice]);
-
-  async function startAudio() {
-    if (hasStartedAudioRef.current) return;
-    hasStartedAudioRef.current = true;
-
-    const el = audioRef.current;
-    if (!el) return;
-
-    try {
-      el.loop = true;
-      el.volume = 0;
-      void el.play();
-
-      const fadeMs = 1400;
-      const steps = 20;
-      const stepMs = Math.floor(fadeMs / steps);
-      let i = 0;
-
-      const timer = window.setInterval(() => {
-        i += 1;
-        el.volume = Math.min(1, i / steps);
-        if (i >= steps) window.clearInterval(timer);
-      }, stepMs);
-    } catch {
-      // fail silently
-    }
-  }
 
   function handleTap(val: Choice) {
     startAudio();
@@ -104,12 +71,6 @@ export default function ValentinePage() {
 
   return (
     <main className="min-h-screen ru2-valentine-bg">
-      {/* Hidden audio (plays on tap, loops, no controls) */}
-      <audio
-        ref={audioRef}
-        src="/ru2/audio/winner-winner.m4a?v=2"
-        preload="auto"
-      />
 
       <div className="min-h-screen ru2-overlay">
         <div className="mx-auto w-full max-w-[540px] px-5 py-8">

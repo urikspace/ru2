@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import RU2SelfHeal from "@/components/ru2-self-heal";
+import RU2AudioProvider from "@/components/ru2-audio";
 
 function getSiteUrl() {
   // If you set NEXT_PUBLIC_SITE_URL later (recommended), it will use that.
@@ -66,10 +67,12 @@ export default function RootLayout({
         />
       </head>
       <body>
-        <ThemeProvider>
-          <RU2SelfHeal />
-          {children}
-        </ThemeProvider>
+        <RU2AudioProvider>
+          <ThemeProvider>
+            <RU2SelfHeal />
+            {children}
+          </ThemeProvider>
+        </RU2AudioProvider>
       </body>
     </html>
   );
