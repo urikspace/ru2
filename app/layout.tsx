@@ -63,7 +63,7 @@ export default function RootLayout({
         <link
           rel="preload"
           as="audio"
-          href="/ru2/audio/winner-winner.m4a?v=2"
+          href="/ru2/audio/winner-winner.m4a?v=3"
         />
       </head>
       <body>

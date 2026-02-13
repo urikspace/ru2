@@ -49,69 +49,36 @@ export default function RU2AudioProvider({ children }: { children: React.ReactNo
         const el = audioRef.current;
         if (!el) return;
 
-        // Ensure settings are correct every time
+        // Always ensure these
         el.loop = true;
+        el.preload = "auto";
 
-        // If it's already playing, do nothing
+        // If already playing, no-op
         if (!el.paused && el.currentTime > 0) return;
 
-        // Clear any old timers (important if user taps again)
-        if (retryTimerRef.current) window.clearInterval(retryTimerRef.current);
-        retryTimerRef.current = null;
-
+        // Kill timers from any previous start attempt
         if (fadeTimerRef.current) window.clearInterval(fadeTimerRef.current);
         fadeTimerRef.current = null;
 
-        // We start at 0 volume, but we will ONLY fade once we know audio is actually playing.
+        // If iOS has it in a half-loaded state, calling load() here is safe
+        // AND still inside the user gesture.
+        try {
+            el.load();
+        } catch {
+            // ignore
+        }
+
+        // Start silent, fade once we know it is actually playing
         el.volume = 0;
 
-        const tryPlay = () => {
-            try {
-            const p = el.play();
-            if (p && typeof (p as any).catch === "function") {
-                (p as any).catch(() => {
-                // ignore; we'll retry
-                });
-            }
-            } catch {
-            // ignore; we'll retry
-            }
-        };
-
-        // 1) Immediate attempt (the actual user gesture)
-        tryPlay();
-
-        // 2) Retry a few times quickly after the tap (makes one tap behave like many taps)
-        const startedAt = Date.now();
-        retryTimerRef.current = window.setInterval(() => {
-            // stop retrying if playing
-            if (!el.paused && el.currentTime > 0) {
-            if (retryTimerRef.current) window.clearInterval(retryTimerRef.current);
-            retryTimerRef.current = null;
-            return;
-            }
-
-            // stop after ~8 seconds (prevents infinite loops)
-            if (Date.now() - startedAt > 8000) {
-            if (retryTimerRef.current) window.clearInterval(retryTimerRef.current);
-            retryTimerRef.current = null;
-            return;
-            }
-
-            tryPlay();
-        }, 350);
-
-        // 3) Fade in ONLY when playback begins
         const onPlaying = () => {
-            // stop retries once it’s playing
-            if (retryTimerRef.current) window.clearInterval(retryTimerRef.current);
-            retryTimerRef.current = null;
-
             // fade in
             const fadeMs = 1400;
             const steps = 20;
             const stepMs = Math.floor(fadeMs / steps);
             let i = 0;
+
+            if (fadeTimerRef.current) window.clearInterval(fadeTimerRef.current);
 
             fadeTimerRef.current = window.setInterval(() => {
             i += 1;
@@ -126,7 +93,21 @@ export default function RU2AudioProvider({ children }: { children: React.ReactNo
         };
 
         el.addEventListener("playing", onPlaying);
-        },
+
+        // IMPORTANT: keep play() only in the tap gesture path.
+        // Don’t schedule future play() attempts on iOS.
+        try {
+            const p = el.play();
+            if (p && typeof (p as any).catch === "function") {
+            (p as any).catch(() => {
+                // ignore; iOS may delay until buffered
+                // user tapping again will re-trigger start() legally
+            });
+            }
+        } catch {
+            // ignore
+        }
+      },
     };
   }, [isReady]);
 
@@ -135,7 +116,7 @@ export default function RU2AudioProvider({ children }: { children: React.ReactNo
       {/* Persisted audio element (survives route changes) */}
       <audio
         ref={audioRef}
-        src="/ru2/audio/winner-winner.m4a?v=2"
+        src="/ru2/audio/winner-winner.m4a?v=3"
         preload="auto"
       />
       {children}
