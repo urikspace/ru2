@@ -1,7 +1,7 @@
 "use client";
 
 import confetti from "canvas-confetti";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import RU2Slideshow from "@/components/ru2-slideshow";
 
@@ -13,6 +13,11 @@ export default function ValentinePage() {
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const hasStartedAudioRef = useRef(false);
+  
+  useEffect(() => {
+    // Warm the audio element so play() doesn't wait on buffering in PWA
+    audioRef.current?.load();
+  }, []);
 
   const question =
     "hi. r u… p a l? if yes, i have an important question 🙂 would you like to be my valentine?";
@@ -43,7 +48,7 @@ export default function ValentinePage() {
     try {
       el.loop = true;
       el.volume = 0;
-      await el.play();
+      void el.play();
 
       const fadeMs = 1400;
       const steps = 20;
@@ -100,7 +105,11 @@ export default function ValentinePage() {
   return (
     <main className="min-h-screen ru2-valentine-bg">
       {/* Hidden audio (plays on tap, loops, no controls) */}
-      <audio ref={audioRef} src="/ru2/audio/winner-winner.m4a" preload="auto" />
+      <audio
+        ref={audioRef}
+        src="/ru2/audio/winner-winner.m4a?v=2"
+        preload="auto"
+      />
 
       <div className="min-h-screen ru2-overlay">
         <div className="mx-auto w-full max-w-[540px] px-5 py-8">

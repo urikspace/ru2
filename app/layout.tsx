@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
+import RU2SelfHeal from "@/components/ru2-self-heal";
 
 function getSiteUrl() {
   // If you set NEXT_PUBLIC_SITE_URL later (recommended), it will use that.
@@ -57,8 +58,18 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <link
+          rel="preload"
+          as="audio"
+          href="/ru2/audio/winner-winner.m4a?v=2"
+        />
+      </head>
       <body>
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          <RU2SelfHeal />
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );
