@@ -19,6 +19,7 @@ export default function ValentinePage() {
   // ✅ VALENTINE TOP (Photo 1) slideshow filenames go here ONLY
   const valentineTopImages = [
     "/ru2/slides/rue/1-rue-1.png",
+    "/ru2/slides/rue/7-rue-9.png",
     "/ru2/slides/rue/2-rue-3.png",
     "/ru2/slides/rue/3-rue-8.png",
     "/ru2/slides/rue/4-rue-4.png",
